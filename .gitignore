@@ -24,3 +24,9 @@ node_modules/
 .vscode/
 Thumbs.db
 .DS_Store
+
+# graphify: machine-local files (extraction cache, interpreter path, scan root, token log)
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cost.json
