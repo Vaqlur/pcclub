@@ -2,7 +2,22 @@
 
 Management system for PC clubs in Kazakhstan: backend API, customer mobile app, admin panel and
 (later) a Windows client for club PCs. See [CLAUDE.md](CLAUDE.md) for architecture, conventions
-and the roadmap. Only the backend exists so far.
+and the roadmap. The backend and a first version of the mobile app exist so far.
+
+## Mobile app quick start
+
+With the backend running (see below) and demo data seeded (`python -m app.cli seed-demo`):
+
+```bash
+cd mobile
+npm install
+npm run web      # browser preview at http://localhost:8081
+npm start        # QR code for Expo Go on a phone
+```
+
+On a phone, copy `mobile/.env.example` to `mobile/.env`, set `EXPO_PUBLIC_API_URL` to this PC's
+LAN address, and start the API with `--host 0.0.0.0`. In dev the login code is `OTP_FIXED_CODE`
+from `backend/.env`, and payments go through the mock provider.
 
 ## Backend quick start (Windows)
 

@@ -5,7 +5,7 @@ A Senet/Langame-style product. Four parts in one monorepo:
 | Part | Folder | Stack | Status |
 |---|---|---|---|
 | Backend API | `backend/` | FastAPI, PostgreSQL 17, SQLAlchemy 2 (async, asyncpg), Alembic | **phase 1 done** |
-| Customer mobile app | `mobile/` | React Native + Expo (TypeScript) | phase 2, not started |
+| Customer mobile app | `mobile/` | React Native + Expo SDK 58 (TypeScript, Expo Router) | **phase 2 first version**: login, IIN, catalog, booking, mock payment, history |
 | Admin panel for club owners | `admin/` | React + Vite (TypeScript) | phase 3, not started |
 | Windows client for club PCs | `client/` | TBD | phase 4, not started |
 
@@ -32,6 +32,50 @@ python -m venv .venv
 
 Config comes from environment variables or `backend/.env` (gitignored; see `.env.example`).
 `ENVIRONMENT=prod` refuses to start with dev secrets or a fixed OTP code.
+CORS is for browsers only (Expo web preview, later the admin panel): `http://localhost:*` is
+allowed in dev, nothing in test/prod unless `CORS_ALLOW_ORIGIN_REGEX` is set.
+
+## Commands (run from `mobile/`)
+
+```bash
+npm install
+npm run web          # Expo web preview at http://localhost:8081 (needs the API on :8000)
+npm start            # dev server + QR code for Expo Go
+npm run typecheck    # tsc --noEmit
+npm run lint         # expo lint
+npm test             # node --test on src/**/*.test.ts (pure helpers, no React)
+npm run gen:api      # regenerate src/api/schema.d.ts from mobile/openapi.json
+npx expo install <package>   # always this instead of npm install for Expo/RN packages
+```
+
+`mobile/openapi.json` is a dump of the backend's OpenAPI spec; refresh it after API changes
+(`app.openapi()` from `create_app()`), then run `npm run gen:api`. The API base URL is
+`EXPO_PUBLIC_API_URL` (default `http://localhost:8000`). `mobile/AGENTS.md` has Expo-specific
+rules; Expo APIs change every SDK, so check the versioned docs before using one.
+
+## Mobile layout
+
+```
+mobile/src/
+  app/               Expo Router screens only: login, identity, index (clubs), clubs/[clubId],
+                     pcs/[pcId] (booking), bookings/, bookings/[bookingId] (payment, cancel)
+  api/               client.ts (bearer token, error envelope, single-flight refresh),
+                     endpoints.ts (typed calls), schema.d.ts (generated), tokenStore.ts
+  auth/              AuthContext: session state that drives the route guards in app/_layout.tsx
+  lib/               PURE helpers with tests: iin, phone, time (club timezone), slots
+  i18n/              ru.ts strings + error messages keyed by API error code
+  ui/                theme and shared components
+```
+
+Mobile rules:
+- Times are shown and picked on the **club's** clock (`lib/time.ts`), never the phone's.
+- The app never decides business rules: it shows the server's error by `code` (`i18n/ru.ts`).
+  Local IIN/phone/slot checks only catch typos and draw the picker.
+- A booking is shown as paid only after re-reading it from the server; the mock payment buttons
+  just make the mock provider send its webhook.
+- One `Idempotency-Key` per payment attempt, reused on retry.
+- Refresh is single-flight (`api/client.ts`): replaying a rotated refresh token revokes all
+  sessions, so concurrent 401s must share one refresh.
 
 ## Backend layout
 
@@ -136,8 +180,10 @@ identity with `POST /v1/me/identity`. Staff use email + password. Both get a JWT
 ## Roadmap
 
 1. **Backend core** — done: auth, IIN identity, catalog, booking, age rule, payments, admin CRUD.
-2. **Customer mobile app** — Expo app, TS client generated from OpenAPI, ru/kk localization,
-   push notifications, real SMS provider.
+2. **Customer mobile app** — first version done: Expo app, types generated from OpenAPI, phone +
+   IIN registration, catalog, booking, mock payment, history (Russian only). Still to do: kk/en
+   localization, push notifications, real SMS provider, real payment redirects, profile editing,
+   testing on real devices and store builds.
 3. **Admin panel + real integrations** — React admin (club map, bookings, tariffs, reports,
    staff roles); real card acquirer, Kaspi and eGov adapters; fiscal receipts; hold-expiry and
    refund-retry worker; production hosting in Kazakhstan.
