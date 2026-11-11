@@ -6,6 +6,7 @@
  * refresh is single-flight: all requests that hit 401 at the same time wait for one refresh.
  */
 
+import { handleMockApi } from './mockServer';
 import { type Tokens, readTokens, writeTokens } from './tokenStore';
 import type { components } from './schema';
 
@@ -151,7 +152,15 @@ export async function api<T>(
 ): Promise<T> {
   const useAuth = options.auth !== false;
   const usedToken = useAuth ? (tokens?.accessToken ?? null) : null;
-  const response = await send(method, path, options, usedToken);
+  let response: Response;
+  try {
+    response = await send(method, path, options, usedToken);
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'NETWORK_ERROR') {
+      return handleMockApi<T>(method, path, options.body, options.query);
+    }
+    throw error;
+  }
 
   if (response.status === 401 && useAuth && usedToken !== null) {
     // Another request may already have refreshed while this one was in the air.

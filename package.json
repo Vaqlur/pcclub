@@ -3,8 +3,9 @@
   "private": true,
   "scripts": {
     "postinstall": "npm --prefix mobile install",
-    "dev": "npm --prefix mobile run web",
-    "start": "npm --prefix mobile run web",
-    "build": "npm --prefix mobile run build"
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "build": "npm --prefix mobile run build",
+    "lint": "npm --prefix mobile run typecheck"
   }
 }

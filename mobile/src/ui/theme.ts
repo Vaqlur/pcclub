@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import {
   type ReactNode,
   createContext,
+  createElement,
   useCallback,
   useContext,
   useEffect,
@@ -167,7 +168,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
   }, [mode, setTheme, toggleTheme]);
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return createElement(ThemeContext.Provider, { value }, children);
 }
 
 export function useTheme(): ThemeContextValue {

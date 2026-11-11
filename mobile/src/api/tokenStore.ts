@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 const KEY = 'pcclub.session';
+const INIT_KEY = 'pcclub.demo_initialized';
 
 export type Tokens = { accessToken: string; refreshToken: string };
 
@@ -15,7 +16,16 @@ const isWeb = Platform.OS === 'web';
 
 export async function readTokens(): Promise<Tokens | null> {
   try {
-    const raw = isWeb ? globalThis.localStorage?.getItem(KEY) : await SecureStore.getItemAsync(KEY);
+    let raw = isWeb ? globalThis.localStorage?.getItem(KEY) : await SecureStore.getItemAsync(KEY);
+    if (!raw && isWeb && !globalThis.localStorage?.getItem(INIT_KEY)) {
+      const demo: Tokens = {
+        accessToken: 'demo-access-token',
+        refreshToken: 'demo-refresh-token',
+      };
+      globalThis.localStorage?.setItem(INIT_KEY, '1');
+      globalThis.localStorage?.setItem(KEY, JSON.stringify(demo));
+      raw = JSON.stringify(demo);
+    }
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<Tokens>;
     if (typeof parsed.accessToken !== 'string' || typeof parsed.refreshToken !== 'string') {
