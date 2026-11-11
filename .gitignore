@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Local databases
+.pgdata/
+
+# Node (mobile/, admin/ in later phases)
+node_modules/
+
+# Editors / OS
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

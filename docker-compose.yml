@@ -1,0 +1,23 @@
+# Optional local PostgreSQL for machines with Docker (and for CI). Dev-only credentials.
+#   DATABASE_URL=postgresql+asyncpg://pcclub:pcclub@localhost:5432/pcclub
+#   TEST_DATABASE_URL=postgresql+asyncpg://pcclub:pcclub@localhost:5432/pcclub_test
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: pcclub
+      POSTGRES_PASSWORD: pcclub
+      POSTGRES_DB: pcclub
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/scripts/create_test_db.sql:/docker-entrypoint-initdb.d/create_test_db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pcclub -d pcclub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
