@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { errorMessage, t } from '@/i18n';
 import { isValidIin } from '@/lib/iin';
 import { Button, Field, Notice, Screen } from '@/ui/components';
-import { font } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 
 /**
  * IIN verification. The local check only catches typos; the server asks the identity registry
@@ -14,6 +14,7 @@ import { font } from '@/ui/theme';
  */
 export default function IdentityScreen() {
   const { setUser, signOut } = useAuth();
+  const { font } = useTheme();
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [iin, setIin] = useState('');

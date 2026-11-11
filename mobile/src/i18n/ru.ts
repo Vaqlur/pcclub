@@ -11,6 +11,14 @@ export const ru = {
     signOut: 'Выйти',
     roundTheClock: 'Круглосуточно',
     perHour: '/ час',
+    refresh: 'Обновить',
+  },
+  theme: {
+    label: 'Тема оформления',
+    light: 'Светлая',
+    dark: 'Тёмная',
+    switchToDark: 'Тёмная тема',
+    switchToLight: 'Светлая тема',
   },
   login: {
     title: 'Вход',

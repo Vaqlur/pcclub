@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,14 +14,42 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { errorMessage, t } from '@/i18n';
 
-import { colors, font, radius, space } from './theme';
+import { radius, space, useTheme } from './theme';
 
 /** Page frame: safe area on the sides and bottom (the stack header covers the top), scrolling. */
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+export function Screen({
+  children,
+  scroll = true,
+  refreshing = false,
+  onRefresh,
+}: {
+  children: ReactNode;
+  scroll?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}) {
+  const { colors } = useTheme();
   return (
-    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+      edges={['left', 'right', 'bottom']}
+    >
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                progressBackgroundColor={colors.surface}
+              />
+            ) : undefined
+          }
+        >
           {children}
         </ScrollView>
       ) : (
@@ -48,6 +77,7 @@ export function Button({
   loading,
   accessibilityLabel,
 }: ButtonProps) {
+  const { colors } = useTheme();
   const inactive = disabled || loading;
   const textColor =
     inactive && variant !== 'link'
@@ -66,11 +96,23 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        variant === 'primary' && { backgroundColor: pressed ? colors.primaryPressed : colors.primary },
-        variant === 'secondary' && styles.buttonOutline,
-        variant === 'danger' && [styles.buttonOutline, { borderColor: colors.danger }],
+        variant === 'primary' && {
+          backgroundColor: pressed ? colors.primaryPressed : colors.primary,
+        },
+        variant === 'secondary' && [
+          styles.buttonOutline,
+          { borderColor: colors.primary, backgroundColor: colors.surface },
+        ],
+        variant === 'danger' && [
+          styles.buttonOutline,
+          { borderColor: colors.danger, backgroundColor: colors.surface },
+        ],
         variant === 'link' && styles.buttonLink,
-        inactive && variant !== 'link' && styles.buttonDisabled,
+        inactive &&
+          variant !== 'link' && {
+            backgroundColor: colors.disabled,
+            borderColor: colors.disabled,
+          },
         pressed && variant !== 'primary' && { opacity: 0.6 },
       ]}
     >
@@ -86,16 +128,25 @@ export function Button({
 type FieldProps = TextInputProps & { label: string; error?: string | null };
 
 export function Field({ label, error, style, ...input }: FieldProps) {
+  const { colors } = useTheme();
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={colors.disabledText}
-        style={[styles.input, error ? { borderColor: colors.danger } : null, style]}
+        style={[
+          styles.input,
+          {
+            borderColor: error ? colors.danger : colors.border,
+            color: colors.text,
+            backgroundColor: colors.surface,
+          },
+          style,
+        ]}
         {...input}
       />
-      {error ? <Text style={styles.fieldError}>{error}</Text> : null}
+      {error ? <Text style={[styles.fieldError, { color: colors.danger }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -103,6 +154,7 @@ export function Field({ label, error, style, ...input }: FieldProps) {
 type NoticeProps = { tone?: 'error' | 'success' | 'warning' | 'info'; children: ReactNode };
 
 export function Notice({ tone = 'error', children }: NoticeProps) {
+  const { colors } = useTheme();
   const palette = {
     error: [colors.dangerSoft, colors.danger],
     success: [colors.successSoft, colors.success],
@@ -120,12 +172,17 @@ export function Notice({ tone = 'error', children }: NoticeProps) {
 }
 
 export function Card({ children, onPress }: { children: ReactNode; onPress?: () => void }) {
-  if (!onPress) return <View style={styles.card}>{children}</View>;
+  const { colors } = useTheme();
+  const cardStyle = [
+    styles.card,
+    { backgroundColor: colors.surface, borderColor: colors.border },
+  ];
+  if (!onPress) return <View style={cardStyle}>{children}</View>;
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && { backgroundColor: colors.primarySoft }]}
+      style={({ pressed }) => [...cardStyle, pressed && { backgroundColor: colors.primarySoft }]}
     >
       {children}
     </Pressable>
@@ -141,17 +198,24 @@ type ChipProps = {
 };
 
 export function Chip({ label, sublabel, selected, disabled, onPress }: ChipProps) {
+  const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected, disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.chip, selected && styles.chipSelected, disabled && styles.chipDisabled]}
+      style={[
+        styles.chip,
+        { borderColor: colors.border, backgroundColor: colors.surface },
+        selected && { backgroundColor: colors.primary, borderColor: colors.primary },
+        disabled && { backgroundColor: colors.disabled, borderColor: colors.disabled },
+      ]}
     >
       <Text
         style={[
           styles.chipText,
+          { color: colors.text },
           selected && { color: colors.onPrimary },
           disabled && { color: colors.disabledText },
         ]}
@@ -159,7 +223,15 @@ export function Chip({ label, sublabel, selected, disabled, onPress }: ChipProps
         {label}
       </Text>
       {sublabel ? (
-        <Text style={[styles.chipSub, selected && { color: colors.onPrimary }]}>{sublabel}</Text>
+        <Text
+          style={[
+            styles.chipSub,
+            { color: colors.muted },
+            selected && { color: colors.onPrimary },
+          ]}
+        >
+          {sublabel}
+        </Text>
       ) : null}
     </Pressable>
   );
@@ -173,6 +245,7 @@ export function Loadable<T>({
   state: { data: T | null; error: unknown; loading: boolean; reload: () => void };
   children: (data: T) => ReactNode;
 }) {
+  const { colors } = useTheme();
   if (state.data !== null) return <>{children(state.data)}</>;
   if (state.error) {
     return (
@@ -190,16 +263,17 @@ export function Loadable<T>({
 }
 
 export function Row({ label, value }: { label: string; value: string }) {
+  const { font } = useTheme();
   return (
     <View style={styles.row}>
       <Text style={font.small}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      <Text style={[font.body, styles.rowValue]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1 },
   content: {
     padding: space.lg,
     gap: space.md,
@@ -215,30 +289,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonOutline: { borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface },
+  buttonOutline: { borderWidth: 1 },
   buttonLink: { minHeight: 40, paddingHorizontal: space.sm },
-  buttonDisabled: { backgroundColor: colors.disabled, borderColor: colors.disabled },
   buttonText: { fontSize: 16, fontWeight: '600' },
   field: { gap: space.xs },
-  label: { fontSize: 14, fontWeight: '500', color: colors.muted },
+  label: { fontSize: 14, fontWeight: '500' },
   input: {
     minHeight: 48,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: space.md,
     fontSize: 17,
-    color: colors.text,
-    backgroundColor: colors.surface,
   },
-  fieldError: { fontSize: 14, color: colors.danger },
+  fieldError: { fontSize: 14 },
   notice: { borderRadius: radius.md, padding: space.md },
   noticeText: { fontSize: 15, lineHeight: 21 },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: space.lg,
     gap: space.xs,
   },
@@ -249,16 +317,12 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipDisabled: { backgroundColor: colors.disabled, borderColor: colors.disabled },
-  chipText: { fontSize: 15, fontWeight: '500', color: colors.text },
-  chipSub: { fontSize: 12, color: colors.muted },
+  chipText: { fontSize: 15, fontWeight: '500' },
+  chipSub: { fontSize: 12 },
   centered: { paddingVertical: space.xl, gap: space.md },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: space.md },
-  rowValue: { ...font.body, flexShrink: 1, textAlign: 'right' },
+  rowValue: { flexShrink: 1, textAlign: 'right' },
 });

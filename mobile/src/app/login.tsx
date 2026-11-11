@@ -6,11 +6,12 @@ import { useAuth } from '@/auth/AuthContext';
 import { errorMessage, t } from '@/i18n';
 import { normalizePhone } from '@/lib/phone';
 import { Button, Field, Notice, Screen } from '@/ui/components';
-import { font } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 
 /** Phone, then the SMS code. The account is created by the server on first login. */
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const { font, mode, toggleTheme } = useTheme();
   const [phoneInput, setPhoneInput] = useState('+7');
   const [phone, setPhone] = useState<string | null>(null); // set once a code has been sent
   const [code, setCode] = useState('');
@@ -79,6 +80,11 @@ export default function LoginScreen() {
         />
         {error ? <Notice>{error}</Notice> : null}
         <Button title={t.login.sendCode} onPress={sendCode} loading={busy} />
+        <Button
+          title={mode === 'light' ? t.theme.switchToDark : t.theme.switchToLight}
+          variant="link"
+          onPress={toggleTheme}
+        />
       </Screen>
     );
   }

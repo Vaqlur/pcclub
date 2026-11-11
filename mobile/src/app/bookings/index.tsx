@@ -8,13 +8,14 @@ import { formatTime } from '@/lib/time';
 import { useLoad } from '@/lib/useLoad';
 import { Button, Card, Loadable, Notice, Screen } from '@/ui/components';
 import { StatusBadge } from '@/ui/StatusBadge';
-import { font, space } from '@/ui/theme';
+import { space, useTheme } from '@/ui/theme';
 
 const FALLBACK_ZONE = 'Asia/Almaty';
 
 /** Booking history, newest first. Times are shown on each club's own clock. */
 export default function BookingsScreen() {
   const router = useRouter();
+  const { font } = useTheme();
   // Pages after the first, appended by "show more". Reset whenever the first page reloads.
   const [extra, setExtra] = useState<{ items: Booking[]; cursor: string | null } | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);

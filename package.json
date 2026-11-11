@@ -1,0 +1,10 @@
+{
+  "name": "pcclub-root",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm --prefix mobile install",
+    "dev": "npm --prefix mobile run web",
+    "start": "npm --prefix mobile run web",
+    "build": "npm --prefix mobile run build"
+  }
+}
