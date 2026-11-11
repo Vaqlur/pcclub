@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     payment_provider_card: str = "mock"
     payment_provider_kaspi: str = "mock"
 
+    # --- CORS: only browsers need it (Expo web preview, admin panel); native apps do not ---
+    # Regex of allowed origins. None = localhost-only in dev, disabled in test and prod.
+    cors_allow_origin_regex: str | None = None
+
     # --- booking rules ---
     booking_hold_minutes: int = 10
     slot_minutes: int = 30
